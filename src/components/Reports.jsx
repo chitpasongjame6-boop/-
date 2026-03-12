@@ -48,7 +48,7 @@ const PERIOD_OPTS = [
 ]
 
 export default function Reports() {
-  const { transactions, cashFlow, settings } = useApp()
+  const { transactions, cashFlow, machines, settings } = useApp()
   const [period, setPeriod] = useState('month')
   const [customFrom, setCustomFrom] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'))
   const [customTo, setCustomTo] = useState(format(new Date(), 'yyyy-MM-dd'))
@@ -127,11 +127,31 @@ export default function Reports() {
     }]
   }
 
+  // Machine performance
+  const machinePerf = useMemo(() => {
+    const map = {}
+    filteredTx.forEach(tx => {
+      if (!tx.machineName) return
+      if (!map[tx.machineName]) map[tx.machineName] = { name: tx.machineName, count: 0, profit: 0, volume: 0, cashIn: 0, cashOut: 0 }
+      map[tx.machineName].count++
+      map[tx.machineName].profit += tx.profit || 0
+      map[tx.machineName].volume += tx.sourceAmount || 0
+    })
+    filteredCf.forEach(cf => {
+      if (!cf.machineName) return
+      if (!map[cf.machineName]) map[cf.machineName] = { name: cf.machineName, count: 0, profit: 0, volume: 0, cashIn: 0, cashOut: 0 }
+      if (cf.type === 'โอนเก็บคลัง') map[cf.machineName].cashOut += cf.amount || 0
+      else map[cf.machineName].cashIn += cf.amount || 0
+    })
+    return Object.values(map).sort((a, b) => b.profit - a.profit)
+  }, [filteredTx, filteredCf])
+
   const tabs = [
-    { id: 'overview', label: 'ภาพรวม' },
-    { id: 'charts', label: 'กราฟ' },
-    { id: 'staff', label: 'พนักงาน' },
-    { id: 'detail', label: 'รายละเอียด' },
+    { id: 'overview', label: 'ພາບລວມ' },
+    { id: 'charts', label: 'ກຣາຟ' },
+    { id: 'machines', label: 'ຕູ້' },
+    { id: 'staff', label: 'ພະນັກງານ' },
+    { id: 'detail', label: 'ລາຍລະອີດ' },
   ]
 
   return (
@@ -307,6 +327,60 @@ export default function Reports() {
               <Bar data={weeklyBarData} options={chartBase} />
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Machine tab */}
+      {activeTab === 'machines' && (
+        <div className="card animate-fade-in">
+          <h3 className="font-semibold text-dark-100 mb-4">ສະຫຼຸປແຕ່ລະຕູ້</h3>
+          {machinePerf.length === 0 ? (
+            <div className="text-center text-dark-500 py-10">
+              <p>ຍັງບໍ່ມີຂ້ອມູນ — ເພີ່ມຕູ້ໃນ Settings ແລ້ວເລືອກຕູ້ໃນຟອມ</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-dark-800">
+                    <th className="table-header">ຕູ້ / ເຄື່ອງ</th>
+                    <th className="table-header text-right">ລາຍການບັດ</th>
+                    <th className="table-header text-right">ຍອດບັດ (₭)</th>
+                    <th className="table-header text-right">ກຳໄລ (₭)</th>
+                    <th className="table-header text-right">ໂອນເຂ້າ (₭)</th>
+                    <th className="table-header text-right">ໂອນເກັບ (₭)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {machinePerf.map((m, i) => (
+                    <tr key={m.name} className="hover:bg-dark-800/50 transition-colors">
+                      <td className="table-cell">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 bg-blue-500/20 rounded-lg flex items-center justify-center text-xs font-bold text-blue-400">{i+1}</div>
+                          <span className="font-semibold text-dark-200">{m.name}</span>
+                        </div>
+                      </td>
+                      <td className="table-cell text-right">{m.count}</td>
+                      <td className="table-cell text-right font-mono text-dark-300">₭{formatNumber(m.volume)}</td>
+                      <td className="table-cell text-right font-bold text-primary-400">₭{formatNumber(m.profit)}</td>
+                      <td className="table-cell text-right text-red-400">₭{formatNumber(m.cashIn)}</td>
+                      <td className="table-cell text-right text-green-400">₭{formatNumber(m.cashOut)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t-2 border-dark-700">
+                    <td className="py-3 px-4 text-sm font-bold text-dark-300">ຣວມ</td>
+                    <td className="py-3 px-4 text-right font-bold text-dark-200">{machinePerf.reduce((s,m)=>s+m.count,0)}</td>
+                    <td className="py-3 px-4 text-right font-bold font-mono text-dark-200">₭{formatNumber(machinePerf.reduce((s,m)=>s+m.volume,0))}</td>
+                    <td className="py-3 px-4 text-right font-bold text-primary-400">₭{formatNumber(machinePerf.reduce((s,m)=>s+m.profit,0))}</td>
+                    <td className="py-3 px-4 text-right font-bold text-red-400">₭{formatNumber(machinePerf.reduce((s,m)=>s+m.cashIn,0))}</td>
+                    <td className="py-3 px-4 text-right font-bold text-green-400">₭{formatNumber(machinePerf.reduce((s,m)=>s+m.cashOut,0))}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          )}
         </div>
       )}
 

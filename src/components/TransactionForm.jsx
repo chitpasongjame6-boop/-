@@ -12,10 +12,12 @@ const RATE_PRESETS = {
 }
 
 export default function TransactionForm() {
-  const { transactions, addTransaction, deleteTransaction, staff, user } = useApp()
+  const { transactions, addTransaction, deleteTransaction, staff, machines, user } = useApp()
   const [form, setForm] = useState({
     staffId: '',
     staffName: '',
+    machineId: '',
+    machineName: '',
     type: 'หลัก5',
     sourceAmount: '',
     rate: '',
@@ -37,6 +39,12 @@ export default function TransactionForm() {
     const id = e.target.value
     const s = staff.find(s => s.id === id)
     setForm(f => ({ ...f, staffId: id, staffName: s?.name || '' }))
+  }
+
+  const handleMachineChange = (e) => {
+    const id = e.target.value
+    const m = machines.find(m => m.id === id)
+    setForm(f => ({ ...f, machineId: id, machineName: m?.name || '' }))
   }
 
   const handleTypeChange = (type) => {
@@ -121,14 +129,27 @@ export default function TransactionForm() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Staff */}
               <div>
-                <label className="label">พนักงาน</label>
+                <label className="label">ພະນັກງານ</label>
                 <select className="select" value={form.staffId} onChange={handleStaffChange} required>
-                  <option value="">-- เลือกพนักงาน --</option>
+                  <option value="">-- ເລືອກພະນັກງານ --</option>
                   {staff.map(s => (
                     <option key={s.id} value={s.id}>{s.name}</option>
                   ))}
                 </select>
               </div>
+
+              {/* Machine */}
+              {machines.length > 0 && (
+                <div>
+                  <label className="label">ຕູ້ / ເຄື່ອງ</label>
+                  <select className="select" value={form.machineId} onChange={handleMachineChange}>
+                    <option value="">-- ເລືອກຕູ້ --</option>
+                    {machines.map(m => (
+                      <option key={m.id} value={m.id}>{m.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {/* Type */}
               <div>
@@ -297,8 +318,9 @@ export default function TransactionForm() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-dark-800">
-                      <th className="table-header">พนักงาน</th>
-                      <th className="table-header">ประเภท</th>
+                      <th className="table-header">ພະນັກງານ</th>
+                      {machines.length > 0 && <th className="table-header">ຕູ້</th>}
+                      <th className="table-header">ປະເພດ</th>
                       <th className="table-header text-right">ยอดต้นทาง</th>
                       <th className="table-header text-right">เรท</th>
                       {isOwner && <th className="table-header text-right">กำไร</th>}
@@ -310,6 +332,7 @@ export default function TransactionForm() {
                     {filtered.map(tx => (
                       <tr key={tx.id} className="hover:bg-dark-800/50 transition-colors group">
                         <td className="table-cell font-medium">{tx.staffName}</td>
+                        {machines.length > 0 && <td className="table-cell text-dark-400 text-xs">{tx.machineName || '-'}</td>}
                         <td className="table-cell">
                           <span className={`badge ${tx.type === 'หลัก5' ? 'badge-blue' : 'badge-purple'}`}>
                             {tx.type}

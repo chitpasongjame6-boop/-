@@ -2,12 +2,13 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { sendLineNotify, buildCashInMessage, buildTransactionMessage } from '../utils/lineNotify'
 import {
   listenTransactions, listenCashFlow, listenStaffTasks, listenAnnouncements,
-  listenStaff, listenAccounts, listenSettings,
+  listenStaff, listenAccounts, listenMachines, listenSettings,
   addTransaction as _addTransaction, deleteTransaction as _deleteTransaction,
   addCashFlow as _addCashFlow, deleteCashFlow as _deleteCashFlow,
   addStaffTask as _addStaffTask, updateStaffTask as _updateStaffTask, deleteStaffTask as _deleteStaffTask,
   addAnnouncement as _addAnnouncement, deleteAnnouncement as _deleteAnnouncement,
   addStaff as _addStaff, deleteStaff as _deleteStaff,
+  addMachine as _addMachine, deleteMachine as _deleteMachine,
   addAccount as _addAccount, deleteAccount as _deleteAccount, updateAccountPin as _updateAccountPin,
   saveSettings as _saveSettings, initOwnerAccount, initSettings,
 } from '../utils/firestoreDB'
@@ -21,6 +22,7 @@ export function AppProvider({ children }) {
   const [staffTasks, setStaffTasks] = useState([])
   const [announcements, setAnnouncements] = useState([])
   const [staff, setStaff] = useState([])
+  const [machines, setMachines] = useState([])
   const [accounts, setAccounts] = useState([])
   const [settings, setSettings] = useState({ initialCash: 0, lineToken: '', businessName: 'ຮ້ານແລກເງິນ' })
   const [currentPage, setCurrentPage] = useState('dashboard')
@@ -37,6 +39,7 @@ export function AppProvider({ children }) {
       listenStaffTasks(setStaffTasks),
       listenAnnouncements(setAnnouncements),
       listenStaff(setStaff),
+      listenMachines(setMachines),
       listenAccounts(setAccounts),
       listenSettings((s) => { setSettings(s); setLoading(false) }),
     ]
@@ -133,6 +136,18 @@ export function AppProvider({ children }) {
     showToast('ລຶບພະນັກງານແລ້ວ', 'info')
   }, [showToast])
 
+  // Machine management
+  const addMachine = useCallback(async (name) => {
+    const item = await _addMachine(name)
+    showToast('ເພີ່ມຕູ້ສຳເລັດ!')
+    return item
+  }, [showToast])
+
+  const deleteMachine = useCallback(async (id) => {
+    await _deleteMachine(id)
+    showToast('ລຶບຕູ້ແລ້ວ', 'info')
+  }, [showToast])
+
   // Account management (login accounts with PIN)
   const addAccount = useCallback(async (name, pin) => {
     const item = await _addAccount(name, pin, 'employee')
@@ -164,6 +179,7 @@ export function AppProvider({ children }) {
       staffTasks, addStaffTask, updateStaffTask, deleteStaffTask,
       announcements, addAnnouncement, deleteAnnouncement,
       staff, addStaff, deleteStaff,
+      machines, addMachine, deleteMachine,
       accounts, addAccount, deleteAccount, updateAccountPin,
       settings, saveSettings,
       currentPage, setCurrentPage,

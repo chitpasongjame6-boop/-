@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
 import { useApp } from '../context/AppContext'
-import { Plus, Users, Lock, Store, Zap, Trash2, KeyRound } from 'lucide-react'
+import { Plus, Users, Lock, Store, Zap, Monitor, KeyRound } from 'lucide-react'
 
 export default function Settings() {
-  const { settings, saveSettings, staff, addStaff, deleteStaff, accounts, addAccount, deleteAccount, updateAccountPin } = useApp()
+  const { settings, saveSettings, staff, addStaff, deleteStaff, machines, addMachine, deleteMachine, accounts, addAccount, deleteAccount, updateAccountPin } = useApp()
   const [form, setForm] = useState({ ...settings })
   const [newStaffName, setNewStaffName] = useState('')
+  const [newMachineName, setNewMachineName] = useState('')
   const [newAccName, setNewAccName] = useState('')
   const [newAccPin, setNewAccPin] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(null)
@@ -27,6 +28,18 @@ export default function Settings() {
   const handleDeleteStaff = (id) => {
     if (confirmDelete === id) { deleteStaff(id); setConfirmDelete(null) }
     else { setConfirmDelete(id); setTimeout(() => setConfirmDelete(null), 3000) }
+  }
+
+  const handleAddMachine = (e) => {
+    e.preventDefault()
+    if (!newMachineName.trim()) return
+    addMachine(newMachineName.trim())
+    setNewMachineName('')
+  }
+
+  const handleDeleteMachine = (id) => {
+    if (confirmDelete === `machine-${id}`) { deleteMachine(id); setConfirmDelete(null) }
+    else { setConfirmDelete(`machine-${id}`); setTimeout(() => setConfirmDelete(null), 3000) }
   }
 
   const handleAddAccount = async (e) => {
@@ -162,6 +175,43 @@ export default function Settings() {
           ))}
           {employeeAccounts.length === 0 && (
             <p className="text-center text-dark-600 text-sm py-4">ຍັງບໍ່ມີພະນັກງານ</p>
+          )}
+        </div>
+      </div>
+
+      {/* Machine Management */}
+      <div className="card">
+        <h3 className="font-semibold text-dark-100 mb-4 flex items-center gap-2">
+          <Monitor className="w-4 h-4 text-blue-400" />
+          ຈັດການຕູ້ / ເຄື່ອງ ({machines.length} ເຄື່ອງ)
+        </h3>
+        <p className="text-xs text-dark-500 mb-4">ເພີ່ມຊື່ຕູ້ຫຼືເຄື່ອງ — ຈະສະແດງໃຫ້ເລືອກໃນຟອມທຸລະກຳ ແລະ ກະແສເງິນສົດ</p>
+        <form onSubmit={handleAddMachine} className="flex gap-2 mb-4">
+          <input className="input flex-1" placeholder="ເຊັ່ນ: ຕູ້ 1, ຄອມ A..."
+            value={newMachineName} onChange={e => setNewMachineName(e.target.value)} />
+          <button type="submit" className="btn-primary px-4"><Plus className="w-4 h-4" /></button>
+        </form>
+        <div className="space-y-2">
+          {machines.map(m => (
+            <div key={m.id} className="flex items-center justify-between p-3 bg-dark-800 rounded-xl border border-dark-700">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                  <Monitor className="w-4 h-4 text-blue-400" />
+                </div>
+                <span className="font-medium text-dark-200">{m.name}</span>
+              </div>
+              <button onClick={() => handleDeleteMachine(m.id)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                  confirmDelete === `machine-${m.id}`
+                    ? 'bg-red-600/30 border-red-500 text-red-300'
+                    : 'bg-dark-700 border-dark-600 text-dark-400 hover:border-red-500/40 hover:text-red-400'
+                }`}>
+                {confirmDelete === `machine-${m.id}` ? 'ຢືນຢັນລຶບ?' : 'ລຶບ'}
+              </button>
+            </div>
+          ))}
+          {machines.length === 0 && (
+            <p className="text-center text-dark-600 text-sm py-4">ຍັງບໍ່ມີຕູ້</p>
           )}
         </div>
       </div>

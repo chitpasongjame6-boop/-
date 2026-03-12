@@ -9,8 +9,8 @@ import { th } from 'date-fns/locale'
 const TYPES = ['โอนเก็บคลัง', 'โอนเข้าตู้']
 
 export default function CashFlow() {
-  const { cashFlow, addCashFlow, deleteCashFlow, staff, settings } = useApp()
-  const [form, setForm] = useState({ type: 'โอนเก็บคลัง', amount: '', staffId: '', staffName: '', note: '' })
+  const { cashFlow, addCashFlow, deleteCashFlow, staff, machines, settings } = useApp()
+  const [form, setForm] = useState({ type: 'โอนเก็บคลัง', amount: '', staffId: '', staffName: '', machineId: '', machineName: '', note: '' })
 
   const netCash = useMemo(() => calcNetCashFlow(settings.initialCash || 0, cashFlow), [cashFlow, settings])
   const totalIn = useMemo(() => sumCashIn(cashFlow), [cashFlow])
@@ -22,11 +22,17 @@ export default function CashFlow() {
     setForm(f => ({ ...f, staffId: id, staffName: s?.name || '' }))
   }
 
+  const handleMachineChange = (e) => {
+    const id = e.target.value
+    const m = machines.find(m => m.id === id)
+    setForm(f => ({ ...f, machineId: id, machineName: m?.name || '' }))
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!form.amount || parseFloat(form.amount) <= 0) return
     addCashFlow({ ...form })
-    setForm(f => ({ ...f, amount: '', staffId: '', staffName: '', note: '' }))
+    setForm(f => ({ ...f, amount: '', staffId: '', staffName: '', machineId: '', machineName: '', note: '' }))
   }
 
   const typeColor = (type) => {
@@ -127,13 +133,23 @@ export default function CashFlow() {
                 />
               </div>
 
-              {(form.type === 'โอนเข้าตู้' || form.type === 'เงินเดือน') && (
+              <div>
+                <label className="label">ພະນັກງານ</label>
+                <select className="select" value={form.staffId} onChange={handleStaffChange}>
+                  <option value="">ບໍ່ລະບຸ</option>
+                  {staff.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {machines.length > 0 && (
                 <div>
-                  <label className="label">พนักงาน {form.type === 'เงินเดือน' ? '(ผู้รับ)' : '(ผู้โอน)'}</label>
-                  <select className="select" value={form.staffId} onChange={handleStaffChange}>
-                    <option value="">-- เลือกพนักงาน --</option>
-                    {staff.map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
+                  <label className="label">ຕູ້ / ເຄື່ອງ</label>
+                  <select className="select" value={form.machineId} onChange={handleMachineChange}>
+                    <option value="">ບໍ່ລະບຸ</option>
+                    {machines.map(m => (
+                      <option key={m.id} value={m.id}>{m.name}</option>
                     ))}
                   </select>
                 </div>
@@ -189,8 +205,9 @@ export default function CashFlow() {
                       {typeIcon(cf.type)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className={`badge text-xs ${typeColor(cf.type)}`}>{cf.type}</span>
+                        {cf.machineName && <span className="text-xs text-blue-400 font-medium">{cf.machineName}</span>}
                         {cf.staffName && <span className="text-xs text-dark-400">{cf.staffName}</span>}
                       </div>
                       <div className="flex items-center justify-between mt-0.5">

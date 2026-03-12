@@ -13,6 +13,7 @@ export const COLS = {
   STAFF: 'staff',
   ACCOUNTS: 'accounts',
   SETTINGS: 'settings',
+  MACHINES: 'machines',
 }
 
 // ─── Listeners (real-time) ────────────────────────────────────────────────────
@@ -36,6 +37,9 @@ export function listenStaff(cb) {
 }
 export function listenAccounts(cb) {
   return onSnapshot(collection(db, COLS.ACCOUNTS), snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
+}
+export function listenMachines(cb) {
+  return onSnapshot(collection(db, COLS.MACHINES), snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
 }
 export function listenSettings(cb) {
   return onSnapshot(doc(db, COLS.SETTINGS, 'main'), snap => {
@@ -127,6 +131,16 @@ export async function addStaff(name) {
 }
 export async function deleteStaff(id) {
   await deleteDoc(doc(db, COLS.STAFF, id))
+}
+
+// ─── Machines (ตู้/เครื่อง) ───────────────────────────────────────────────────
+export async function addMachine(name) {
+  const item = { name }
+  const ref = await addDoc(collection(db, COLS.MACHINES), item)
+  return { id: ref.id, ...item }
+}
+export async function deleteMachine(id) {
+  await deleteDoc(doc(db, COLS.MACHINES, id))
 }
 
 // ─── Accounts (login) ────────────────────────────────────────────────────────

@@ -72,8 +72,8 @@ export default function Reports() {
   const totalVolume = useMemo(() => sumSourceAmount(filteredTx), [filteredTx])
   const profitRate = useMemo(() => calcProfitRate(totalProfit, totalVolume), [totalProfit, totalVolume])
 
-  const cashIn = useMemo(() => filteredCf.filter(c => c.type === 'โอนเข้าตู้').reduce((s, c) => s + c.amount, 0), [filteredCf])
-  const cashOut = useMemo(() => filteredCf.filter(c => c.type !== 'โอนเข้าตู้').reduce((s, c) => s + c.amount, 0), [filteredCf])
+  const cashIn = useMemo(() => filteredCf.filter(c => c.type === 'โอนเก็บคลัง').reduce((s, c) => s + c.amount, 0), [filteredCf])
+  const cashOut = useMemo(() => filteredCf.filter(c => c.type === 'โอนเข้าตู้').reduce((s, c) => s + c.amount, 0), [filteredCf])
 
   const weeklyData = useMemo(() => buildWeeklyProfitChart(transactions, 8), [transactions])
   const dailyData = useMemo(() => buildDailyProfitChart(filteredTx, 30), [filteredTx])
@@ -140,8 +140,8 @@ export default function Reports() {
     filteredCf.forEach(cf => {
       if (!cf.machineName) return
       if (!map[cf.machineName]) map[cf.machineName] = { name: cf.machineName, count: 0, profit: 0, volume: 0, cashIn: 0, cashOut: 0 }
-      if (cf.type === 'โอนเก็บคลัง') map[cf.machineName].cashOut += cf.amount || 0
-      else map[cf.machineName].cashIn += cf.amount || 0
+      if (cf.type === 'โอนเก็บคลัง') map[cf.machineName].cashIn += cf.amount || 0
+      else map[cf.machineName].cashOut += cf.amount || 0
     })
     return Object.values(map).sort((a, b) => b.profit - a.profit)
   }, [filteredTx, filteredCf])
@@ -237,11 +237,11 @@ export default function Reports() {
               <p className="text-xs text-dark-500 mt-1">{filteredTx.length} รายการ</p>
             </div>
             <div className="card border border-primary-500/10">
-              <p className="text-xs text-dark-500 mb-1">โอนเข้าตู้</p>
+              <p className="text-xs text-dark-500 mb-1">ໂອນເກັບຄັງ (ລາຍຮັບ)</p>
               <p className="text-2xl font-bold text-primary-400">+{formatCurrency(cashIn)}</p>
             </div>
             <div className="card border border-red-500/10">
-              <p className="text-xs text-dark-500 mb-1">โอนออก + เงินเดือน</p>
+              <p className="text-xs text-dark-500 mb-1">ໂອນເຂ້າຕູ້ (ລາຍຈ່າຍ)</p>
               <p className="text-2xl font-bold text-red-400">-{formatCurrency(cashOut)}</p>
             </div>
           </div>
@@ -258,11 +258,11 @@ export default function Reports() {
                 <span className="font-bold text-primary-400">+{formatCurrency(totalProfit)}</span>
               </div>
               <div className="flex items-center justify-between py-2.5 border-b border-dark-800">
-                <span className="text-dark-400">รายรับ (โอนเข้าตู้)</span>
+                <span className="text-dark-400">ໂອນເກັບຄັງ (ລາຍຮັບ)</span>
                 <span className="font-semibold text-primary-300">+{formatCurrency(cashIn)}</span>
               </div>
               <div className="flex items-center justify-between py-2.5 border-b border-dark-800">
-                <span className="text-dark-400">รายจ่าย (โอนเก็บคลัง + เงินเดือน)</span>
+                <span className="text-dark-400">ໂອນເຂ້າຕູ້ (ລາຍຈ່າຍ)</span>
                 <span className="font-semibold text-red-400">-{formatCurrency(cashOut)}</span>
               </div>
               <div className="flex items-center justify-between py-3 bg-dark-800 rounded-xl px-4 mt-2">
@@ -347,8 +347,8 @@ export default function Reports() {
                     <th className="table-header text-right">ລາຍການບັດ</th>
                     <th className="table-header text-right">ຍອດບັດ (₭)</th>
                     <th className="table-header text-right">ກຳໄລ (₭)</th>
-                    <th className="table-header text-right">ໂອນເຂ້າ (₭)</th>
                     <th className="table-header text-right">ໂອນເກັບ (₭)</th>
+                    <th className="table-header text-right">ໂອນເຂ້າ (₭)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -363,8 +363,8 @@ export default function Reports() {
                       <td className="table-cell text-right">{m.count}</td>
                       <td className="table-cell text-right font-mono text-dark-300">₭{formatNumber(m.volume)}</td>
                       <td className="table-cell text-right font-bold text-primary-400">₭{formatNumber(m.profit)}</td>
-                      <td className="table-cell text-right text-red-400">₭{formatNumber(m.cashIn)}</td>
-                      <td className="table-cell text-right text-green-400">₭{formatNumber(m.cashOut)}</td>
+                      <td className="table-cell text-right text-green-400">₭{formatNumber(m.cashIn)}</td>
+                      <td className="table-cell text-right text-red-400">₭{formatNumber(m.cashOut)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -374,8 +374,8 @@ export default function Reports() {
                     <td className="py-3 px-4 text-right font-bold text-dark-200">{machinePerf.reduce((s,m)=>s+m.count,0)}</td>
                     <td className="py-3 px-4 text-right font-bold font-mono text-dark-200">₭{formatNumber(machinePerf.reduce((s,m)=>s+m.volume,0))}</td>
                     <td className="py-3 px-4 text-right font-bold text-primary-400">₭{formatNumber(machinePerf.reduce((s,m)=>s+m.profit,0))}</td>
-                    <td className="py-3 px-4 text-right font-bold text-red-400">₭{formatNumber(machinePerf.reduce((s,m)=>s+m.cashIn,0))}</td>
-                    <td className="py-3 px-4 text-right font-bold text-green-400">₭{formatNumber(machinePerf.reduce((s,m)=>s+m.cashOut,0))}</td>
+                    <td className="py-3 px-4 text-right font-bold text-green-400">₭{formatNumber(machinePerf.reduce((s,m)=>s+m.cashIn,0))}</td>
+                    <td className="py-3 px-4 text-right font-bold text-red-400">₭{formatNumber(machinePerf.reduce((s,m)=>s+m.cashOut,0))}</td>
                   </tr>
                 </tfoot>
               </table>

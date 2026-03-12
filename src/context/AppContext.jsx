@@ -11,6 +11,7 @@ import {
   addMachine as _addMachine, deleteMachine as _deleteMachine,
   addAccount as _addAccount, deleteAccount as _deleteAccount, updateAccountPin as _updateAccountPin,
   saveSettings as _saveSettings, initOwnerAccount, initSettings,
+  clearAllData as _clearAllData,
 } from '../utils/firestoreDB'
 
 const AppContext = createContext(null)
@@ -166,6 +167,11 @@ export function AppProvider({ children }) {
   }, [showToast])
 
   // Settings
+  const clearAllData = useCallback(async () => {
+    await _clearAllData()
+    showToast('ລຶບຂ້ອມູນທັງໝມົດແລ້ວ', 'info')
+  }, [showToast])
+
   const saveSettings = useCallback(async (s) => {
     await _saveSettings(s)
     showToast('ບັນທຶກການຕັ້ງຄ່າສຳເລັດ!')
@@ -181,7 +187,7 @@ export function AppProvider({ children }) {
       staff, addStaff, deleteStaff,
       machines, addMachine, deleteMachine,
       accounts, addAccount, deleteAccount, updateAccountPin,
-      settings, saveSettings,
+      settings, saveSettings, clearAllData,
       currentPage, setCurrentPage,
       toast, showToast,
     }}>

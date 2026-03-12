@@ -1,6 +1,6 @@
 import React from 'react'
 import { useApp } from '../context/AppContext'
-import { Menu, Bell, RefreshCw } from 'lucide-react'
+import { Menu, Bell, RefreshCw, LogOut } from 'lucide-react'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
 
@@ -15,7 +15,7 @@ const pageTitles = {
 }
 
 export default function Header({ onMenuToggle }) {
-  const { currentPage, announcements, refresh } = useApp()
+  const { currentPage, announcements, refresh, logout, user } = useApp()
   const today = format(new Date(), 'EEEE d MMMM yyyy', { locale: th })
   const upcomingCount = announcements.filter(a => new Date(a.date) >= new Date()).length
 
@@ -54,6 +54,16 @@ export default function Header({ onMenuToggle }) {
             </span>
           )}
         </div>
+
+        {user && (
+          <button
+            onClick={logout}
+            className="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl hover:bg-red-500/10 transition-colors text-dark-400 hover:text-red-400"
+            title="ອອກຈາກລະບົບ"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        )}
       </div>
     </header>
   )

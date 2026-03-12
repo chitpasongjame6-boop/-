@@ -162,6 +162,15 @@ export async function initOwnerAccount(pin = '1234') {
   }
 }
 
+// ─── Clear all data ───────────────────────────────────────────────────────────
+export async function clearAllData() {
+  const colsToClear = [COLS.TRANSACTIONS, COLS.CASH_FLOW]
+  for (const col of colsToClear) {
+    const snap = await getDocs(collection(db, col))
+    await Promise.all(snap.docs.map(d => deleteDoc(doc(db, col, d.id))))
+  }
+}
+
 // ─── Settings ─────────────────────────────────────────────────────────────────
 export async function saveSettings(settings) {
   await setDoc(doc(db, COLS.SETTINGS, 'main'), settings, { merge: true })

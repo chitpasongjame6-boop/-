@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import { useApp } from '../context/AppContext'
-import { Plus, Users, Lock, Store, Zap, Monitor, KeyRound } from 'lucide-react'
+import { Plus, Users, Lock, Store, Zap, Monitor, KeyRound, AlertTriangle } from 'lucide-react'
 
 export default function Settings() {
-  const { settings, saveSettings, staff, addStaff, deleteStaff, machines, addMachine, deleteMachine, accounts, addAccount, deleteAccount, updateAccountPin } = useApp()
+  const { settings, saveSettings, clearAllData, staff, addStaff, deleteStaff, machines, addMachine, deleteMachine, accounts, addAccount, deleteAccount, updateAccountPin, user } = useApp()
   const [form, setForm] = useState({ ...settings })
   const [newStaffName, setNewStaffName] = useState('')
   const [newMachineName, setNewMachineName] = useState('')
@@ -12,6 +12,8 @@ export default function Settings() {
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [editPinId, setEditPinId] = useState(null)
   const [editPinVal, setEditPinVal] = useState('')
+  const [dangerConfirm, setDangerConfirm] = useState(false)
+  const [clearing, setClearing] = useState(false)
 
   const handleSave = (e) => {
     e.preventDefault()
@@ -263,6 +265,42 @@ export default function Settings() {
           <button type="submit" className="btn-primary">ບັນທຶກ Token</button>
         </form>
       </div>
+
+      {/* Danger Zone — owner only */}
+      {user?.role === 'owner' && (
+        <div className="card border border-red-500/30">
+          <h3 className="font-semibold text-red-400 mb-1 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4" />
+            Danger Zone
+          </h3>
+          <p className="text-xs text-dark-500 mb-4">ລຶບລາຍການທຸລະກຳ ແລະ ກະແສເງິນສົດທັງໝມົດ — ຍໍນກັບຄືນບໍ່ໄດ້</p>
+          {!dangerConfirm ? (
+            <button
+              onClick={() => setDangerConfirm(true)}
+              className="px-4 py-2 rounded-xl border border-red-500/40 text-red-400 text-sm font-medium hover:bg-red-500/10 transition-all"
+            >
+              ລຶບຂ້ອມູນທັງໝມົດ...
+            </button>
+          ) : (
+            <div className="flex items-center gap-3 p-3 bg-red-500/10 rounded-xl border border-red-500/30">
+              <p className="flex-1 text-sm text-red-300">ແນໃຈແທ້ບໍ່? ລຶບເຊີ່ງແລ້ວຊື່ຈະບໍ່ສາມາຖກູ້ຄືນໄດ້!</p>
+              <button
+                onClick={() => setDangerConfirm(false)}
+                className="px-3 py-1.5 rounded-lg text-xs border border-dark-600 text-dark-400 hover:text-dark-200"
+              >
+                ຍົກເລີກ
+              </button>
+              <button
+                disabled={clearing}
+                onClick={async () => { setClearing(true); await clearAllData(); setDangerConfirm(false); setClearing(false) }}
+                className="px-3 py-1.5 rounded-lg text-xs bg-red-600 text-white font-semibold hover:bg-red-700 disabled:opacity-50"
+              >
+                {clearing ? 'ກຳລັງລຶບ...' : 'ຢືນຢັນລຶບ'}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

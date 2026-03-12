@@ -2,7 +2,7 @@ import React, { useMemo } from 'react'
 import { useApp } from '../context/AppContext'
 import {
   TrendingUp, Wallet, ArrowUpRight, ArrowDownRight,
-  Activity, Users, ArrowLeftRight
+  Activity, Users, ArrowLeftRight, ArrowDownCircle, ArrowUpCircle
 } from 'lucide-react'
 import {
   Chart as ChartJS, CategoryScale, LinearScale, PointElement,
@@ -101,7 +101,13 @@ export default function Dashboard() {
   const dailyChart = useMemo(() => buildDailyProfitChart(transactions, 14), [transactions])
   const typeChart = useMemo(() => buildTypeBreakdownChart(monthTx), [monthTx])
 
-  const recentTx = transactions.slice(0, 8)
+  const recentActivity = useMemo(() => {
+    const txItems = transactions.map(t => ({ ...t, _kind: 'tx' }))
+    const cfItems = cashFlow.map(c => ({ ...c, _kind: 'cf' }))
+    return [...txItems, ...cfItems]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 10)
+  }, [transactions, cashFlow])
 
   const staffPerf = useMemo(() => {
     const map = {}
@@ -270,56 +276,74 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Recent Transactions */}
+      {/* Recent Activity */}
       <div className="card">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-dark-100">รายการล่าสุด</h3>
-          <button
-            onClick={() => setCurrentPage('transactions')}
-            className="text-xs text-primary-400 hover:text-primary-300 flex items-center gap-1 transition-colors"
-          >
-            ดูทั้งหมด <ArrowUpRight className="w-3 h-3" />
-          </button>
+          <h3 className="font-semibold text-dark-100">ລາຍການລ່າສຸດ (10 ລາຍການ)</h3>
+          <div className="flex gap-2">
+            <button onClick={() => setCurrentPage('cashflow')} className="text-xs text-dark-400 hover:text-primary-300 flex items-center gap-1 transition-colors">
+              ເງິນສົດ <ArrowUpRight className="w-3 h-3" />
+            </button>
+            <button onClick={() => setCurrentPage('transactions')} className="text-xs text-primary-400 hover:text-primary-300 flex items-center gap-1 transition-colors">
+              ບັດ/ໂອນ <ArrowUpRight className="w-3 h-3" />
+            </button>
+          </div>
         </div>
-        {recentTx.length === 0 ? (
+        {recentActivity.length === 0 ? (
           <div className="text-center py-10 text-dark-500">
             <ArrowLeftRight className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p>ยังไม่มีรายการ · กดเพิ่มรายการแลกเงินได้เลย</p>
+            <p>ຍັງບໍ່ມີລາຍການ</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-dark-800">
-                  <th className="table-header">พนักงาน</th>
-                  <th className="table-header">ประเภท</th>
-                  <th className="table-header text-right">ยอดต้นทาง</th>
-                  <th className="table-header text-right">เรท%</th>
-                  <th className="table-header text-right">กำไร</th>
-                  <th className="table-header">เวลา</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentTx.map(tx => (
-                  <tr key={tx.id} className="hover:bg-dark-800/50 transition-colors">
-                    <td className="table-cell font-medium">{tx.staffName}</td>
-                    <td className="table-cell">
-                      <span className={`badge ${tx.type === 'หลัก5' ? 'badge-blue' : 'badge-purple'}`}>
-                        {tx.type}
+          <div className="space-y-1.5">
+            {recentActivity.map(item => {
+              const isTx = item._kind === 'tx'
+              const isCfIn = !isTx && item.type === 'โอนเก็บคลัง'
+              return (
+                <div key={item.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-dark-800/50 transition-colors">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                    isTx ? 'bg-blue-500/15' : isCfIn ? 'bg-primary-500/15' : 'bg-red-500/15'
+                  }`}>
+                    {isTx
+                      ? <ArrowLeftRight className="w-4 h-4 text-blue-400" />
+                      : isCfIn
+                        ? <ArrowDownCircle className="w-4 h-4 text-primary-400" />
+                        : <ArrowUpCircle className="w-4 h-4 text-red-400" />
+                    }
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-dark-200 truncate">
+                        {isTx ? item.staffName : item.staffName || '—'}
                       </span>
-                    </td>
-                    <td className="table-cell text-right font-mono">₭{formatNumber(tx.sourceAmount)}</td>
-                    <td className="table-cell text-right text-dark-400">{tx.rate}%</td>
-                    <td className="table-cell text-right font-semibold text-primary-400">
-                      +₭{formatNumber(tx.profit)}
-                    </td>
-                    <td className="table-cell text-dark-500 text-xs">
-                      {format(new Date(tx.createdAt), 'HH:mm d MMM', { locale: th })}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <span className={`badge text-[10px] ${
+                        isTx
+                          ? (item.type === 'หลัก5' ? 'badge-blue' : 'badge-purple')
+                          : isCfIn ? 'badge-green' : 'badge-red'
+                      }`}>
+                        {isTx ? item.type : item.type}
+                      </span>
+                      {item.machineName && <span className="text-xs text-dark-600">{item.machineName}</span>}
+                    </div>
+                    <p className="text-xs text-dark-500">
+                      {format(new Date(item.createdAt), 'HH:mm · d MMM', { locale: th })}
+                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    {isTx ? (
+                      <>
+                        <p className="text-sm font-semibold text-primary-400">+₭{formatNumber(item.profit)}</p>
+                        <p className="text-xs text-dark-500">₭{formatNumber(item.sourceAmount)}</p>
+                      </>
+                    ) : (
+                      <p className={`text-sm font-semibold ${isCfIn ? 'text-primary-400' : 'text-red-400'}`}>
+                        {isCfIn ? '+' : '-'}₭{formatNumber(item.amount)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>

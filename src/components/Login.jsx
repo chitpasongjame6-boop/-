@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import { useApp } from '../context/AppContext'
-import { TrendingUp, Shield, Users, Eye, EyeOff, Lock, Loader } from 'lucide-react'
+import { TrendingUp, Shield, Users, Eye, EyeOff, Lock } from 'lucide-react'
 
 export default function Login() {
-  const { login, settings, accounts, loading } = useApp()
+  const { login, settings, accounts } = useApp()
   const [selectedAccount, setSelectedAccount] = useState(null)
   const [password, setPassword] = useState('')
   const [showPass, setShowPass] = useState(false)
@@ -21,17 +21,6 @@ export default function Login() {
 
   const ownerAccounts = accounts.filter(a => a.role === 'owner')
   const employeeAccounts = accounts.filter(a => a.role === 'employee')
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-dark-950 flex items-center justify-center">
-        <div className="text-center">
-          <Loader className="w-10 h-10 text-primary-400 animate-spin mx-auto mb-3" />
-          <p className="text-dark-400 text-sm">ກຳລັງໂຫຼດ...</p>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-dark-950 flex items-center justify-center p-4 relative overflow-hidden">

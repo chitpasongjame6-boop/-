@@ -45,7 +45,7 @@ export function calcNetCashFlow(initialCash, cashFlows) {
   let balance = parseFloat(initialCash) || 0
   for (const cf of cashFlows) {
     if (cf.type === 'โอนเก็บคลัง') balance += cf.amount
-    else if (cf.type === 'โอนเข้าตู้') balance -= cf.amount
+    else if (cf.type === 'โอนเข้าตู้' || cf.type === 'ยอดถอน') balance -= cf.amount
   }
   return balance
 }
@@ -55,7 +55,7 @@ export function sumCashIn(cashFlows) {
 }
 
 export function sumCashOut(cashFlows) {
-  return cashFlows.filter(cf => cf.type === 'โอนเข้าตู้').reduce((s, cf) => s + cf.amount, 0)
+  return cashFlows.filter(cf => cf.type === 'โอนเข้าตู้' || cf.type === 'ยอดถอน').reduce((s, cf) => s + cf.amount, 0)
 }
 
 // ─── Chart Data Builders ──────────────────────────────────────────────────────

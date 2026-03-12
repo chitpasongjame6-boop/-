@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from 'react'
 import { useApp } from '../context/AppContext'
-import { Plus, Trash2, ArrowDownCircle, ArrowUpCircle, Wallet, Download } from 'lucide-react'
+import { Plus, Trash2, ArrowDownCircle, ArrowUpCircle, Wallet, Download, MinusCircle } from 'lucide-react'
 import { exportCashFlowCsv } from '../utils/exportCsv'
 import { formatCurrency, formatNumber, calcNetCashFlow, sumCashIn, sumCashOut } from '../utils/calculations'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
 
-const TYPES = ['โอนเก็บคลัง', 'โอนเข้าตู้']
+const TYPES = ['โอนเก็บคลัง', 'โอนเข้าตู้', 'ยอดถอน']
 
 export default function CashFlow() {
   const { cashFlow, addCashFlow, deleteCashFlow, staff, machines, settings, user } = useApp()
@@ -38,11 +38,13 @@ export default function CashFlow() {
 
   const typeColor = (type) => {
     if (type === 'โอนเก็บคลัง') return 'badge-green'
+    if (type === 'ยอดถอน') return 'badge-yellow'
     return 'badge-red'
   }
 
   const typeIcon = (type) => {
     if (type === 'โอนเก็บคลัง') return <ArrowDownCircle className="w-4 h-4 text-primary-400" />
+    if (type === 'ยอดถอน') return <MinusCircle className="w-4 h-4 text-amber-400" />
     return <ArrowUpCircle className="w-4 h-4 text-red-400" />
   }
 
@@ -214,7 +216,11 @@ export default function CashFlow() {
                         {cf.staffName && <span className="text-xs text-dark-400">{cf.staffName}</span>}
                       </div>
                       <div className="flex items-center justify-between mt-0.5">
-                        <p className={`font-bold ${cf.type === 'โอนเก็บคลัง' ? 'text-primary-400' : 'text-red-400'}`}>
+                        <p className={`font-bold ${
+                          cf.type === 'โอนเก็บคลัง' ? 'text-primary-400'
+                          : cf.type === 'ยอดถอน' ? 'text-amber-400'
+                          : 'text-red-400'
+                        }`}>
                           {cf.type === 'โอนเก็บคลัง' ? '+' : '-'}₭{formatNumber(cf.amount)}
                         </p>
                         <p className="text-xs text-dark-500">

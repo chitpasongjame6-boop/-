@@ -73,7 +73,7 @@ export default function Reports() {
   const profitRate = useMemo(() => calcProfitRate(totalProfit, totalVolume), [totalProfit, totalVolume])
 
   const cashIn = useMemo(() => filteredCf.filter(c => c.type === 'โอนเก็บคลัง').reduce((s, c) => s + c.amount, 0), [filteredCf])
-  const cashOut = useMemo(() => filteredCf.filter(c => c.type === 'โอนเข้าตู้').reduce((s, c) => s + c.amount, 0), [filteredCf])
+  const cashOut = useMemo(() => filteredCf.filter(c => c.type === 'โอนเข้าตู้' || c.type === 'ยอดถอน').reduce((s, c) => s + c.amount, 0), [filteredCf])
 
   const weeklyData = useMemo(() => buildWeeklyProfitChart(transactions, 8), [transactions])
   const dailyData = useMemo(() => buildDailyProfitChart(filteredTx, 30), [filteredTx])

@@ -15,7 +15,7 @@ const pageTitles = {
 }
 
 export default function Header({ onMenuToggle }) {
-  const { currentPage, announcements, refresh, logout, user } = useApp()
+  const { currentPage, announcements, refresh, logout, user, setCurrentPage } = useApp()
   const today = format(new Date(), 'EEEE d MMMM yyyy', { locale: th })
   const upcomingCount = announcements.filter(a => new Date(a.date) >= new Date()).length
 
@@ -45,7 +45,10 @@ export default function Header({ onMenuToggle }) {
         </button>
 
         <div className="relative">
-          <button className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-dark-800 transition-colors text-dark-400 hover:text-dark-200">
+          <button
+            onClick={() => setCurrentPage('announcements')}
+            className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-dark-800 transition-colors text-dark-400 hover:text-dark-200"
+          >
             <Bell className="w-4 h-4" />
           </button>
           {upcomingCount > 0 && (

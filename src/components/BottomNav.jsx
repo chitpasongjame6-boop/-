@@ -1,6 +1,6 @@
 import React from 'react'
 import { useApp } from '../context/AppContext'
-import { LayoutDashboard, ArrowLeftRight, Wallet, ClipboardList, BarChart3, Megaphone, Settings } from 'lucide-react'
+import { LayoutDashboard, ArrowLeftRight, Wallet, ClipboardList, BarChart3, Megaphone, Settings, TrendingUp } from 'lucide-react'
 
 const ownerNav = [
   { id: 'dashboard',    label: 'หน้าหลัก',  icon: LayoutDashboard },
@@ -11,9 +11,10 @@ const ownerNav = [
 ]
 
 const employeeNav = [
-  { id: 'transactions', label: 'รายการ',   icon: ArrowLeftRight },
-  { id: 'tasks',        label: 'งาน',      icon: ClipboardList },
-  { id: 'announcements',label: 'ประกาศ',   icon: Megaphone },
+  { id: 'transactions', label: 'ບັດ/ໂອນ',  icon: ArrowLeftRight },
+  { id: 'cashflow',     label: 'ເງິນສົດ',   icon: Wallet },
+  { id: 'tasks',        label: 'ງານ',       icon: ClipboardList },
+  { id: 'announcements',label: 'ຂ່າວ',      icon: Megaphone },
 ]
 
 export default function BottomNav() {

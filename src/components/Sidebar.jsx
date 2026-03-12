@@ -16,9 +16,10 @@ const ownerNav = [
 ]
 
 const employeeNav = [
-  { id: 'transactions', label: 'กรอกรายการ', icon: ArrowLeftRight },
-  { id: 'tasks', label: 'งานของฉัน', icon: ClipboardList },
-  { id: 'announcements', label: 'ประกาศ', icon: Megaphone },
+  { id: 'transactions', label: 'ບັດ / ໂອນ', icon: ArrowLeftRight },
+  { id: 'cashflow', label: 'ກະແສເງິນສົດ', icon: Wallet },
+  { id: 'tasks', label: 'ງານຂອງຂ້ອຍ', icon: ClipboardList },
+  { id: 'announcements', label: 'ຂ່າວ / ປະກາດ', icon: Megaphone },
 ]
 
 export default function Sidebar({ mobileOpen, onClose }) {

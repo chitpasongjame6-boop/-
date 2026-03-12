@@ -9,7 +9,8 @@ import { th } from 'date-fns/locale'
 const TYPES = ['โอนเก็บคลัง', 'โอนเข้าตู้']
 
 export default function CashFlow() {
-  const { cashFlow, addCashFlow, deleteCashFlow, staff, machines, settings } = useApp()
+  const { cashFlow, addCashFlow, deleteCashFlow, staff, machines, settings, user } = useApp()
+  const isOwner = user?.role === 'owner'
   const [form, setForm] = useState({ type: 'โอนเก็บคลัง', amount: '', staffId: '', staffName: '', machineId: '', machineName: '', note: '' })
 
   const netCash = useMemo(() => calcNetCashFlow(settings.initialCash || 0, cashFlow), [cashFlow, settings])
@@ -178,14 +179,16 @@ export default function CashFlow() {
         <div className="lg:col-span-3">
           <div className="card">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-dark-100">ประวัติกระแสเงินสด</h3>
-              <button
-                onClick={() => exportCashFlowCsv(cashFlow)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-dark-800 border border-dark-600 hover:border-primary-500/50 text-dark-300 hover:text-primary-300 rounded-xl text-xs font-medium transition-all"
-              >
-                <Download className="w-3.5 h-3.5" />
-                Export
-              </button>
+              <h3 className="font-semibold text-dark-100">ປະວັດກະແສເງິນສົດ</h3>
+              {isOwner && (
+                <button
+                  onClick={() => exportCashFlowCsv(cashFlow)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-dark-800 border border-dark-600 hover:border-primary-500/50 text-dark-300 hover:text-primary-300 rounded-xl text-xs font-medium transition-all"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Export
+                </button>
+              )}
             </div>
             {cashFlow.length === 0 ? (
               <div className="text-center py-16 text-dark-500">
@@ -220,12 +223,14 @@ export default function CashFlow() {
                       </div>
                       {cf.note && <p className="text-xs text-dark-600 truncate">{cf.note}</p>}
                     </div>
-                    <button
-                      onClick={() => deleteCashFlow(cf.id)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity text-dark-600 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10 flex-shrink-0"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {isOwner && (
+                      <button
+                        onClick={() => deleteCashFlow(cf.id)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-dark-600 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10 flex-shrink-0"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>

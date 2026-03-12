@@ -1,38 +1,47 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { sendLineNotify, buildCashInMessage, buildTransactionMessage } from '../utils/lineNotify'
 import {
-  getTransactions, getStaff, getCashFlow, getStaffTasks, getAnnouncements, getSettings,
+  listenTransactions, listenCashFlow, listenStaffTasks, listenAnnouncements,
+  listenStaff, listenAccounts, listenSettings,
   addTransaction as _addTransaction, deleteTransaction as _deleteTransaction,
   addCashFlow as _addCashFlow, deleteCashFlow as _deleteCashFlow,
   addStaffTask as _addStaffTask, updateStaffTask as _updateStaffTask, deleteStaffTask as _deleteStaffTask,
   addAnnouncement as _addAnnouncement, deleteAnnouncement as _deleteAnnouncement,
   addStaff as _addStaff, deleteStaff as _deleteStaff,
-  saveSettings as _saveSettings,
-} from '../utils/storage'
+  addAccount as _addAccount, deleteAccount as _deleteAccount, updateAccountPin as _updateAccountPin,
+  saveSettings as _saveSettings, initOwnerAccount, initSettings,
+} from '../utils/firestoreDB'
 
 const AppContext = createContext(null)
 
 export function AppProvider({ children }) {
-  const [user, setUser] = useState(null) // { role: 'owner' | 'employee', name: string }
+  const [user, setUser] = useState(null)
   const [transactions, setTransactions] = useState([])
   const [cashFlow, setCashFlow] = useState([])
   const [staffTasks, setStaffTasks] = useState([])
   const [announcements, setAnnouncements] = useState([])
   const [staff, setStaff] = useState([])
-  const [settings, setSettings] = useState({})
+  const [accounts, setAccounts] = useState([])
+  const [settings, setSettings] = useState({ initialCash: 0, lineToken: '', businessName: 'ຮ້ານແລກເງິນ' })
   const [currentPage, setCurrentPage] = useState('dashboard')
   const [toast, setToast] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-  const refresh = useCallback(() => {
-    setTransactions(getTransactions())
-    setCashFlow(getCashFlow())
-    setStaffTasks(getStaffTasks())
-    setAnnouncements(getAnnouncements())
-    setStaff(getStaff())
-    setSettings(getSettings())
+  useEffect(() => {
+    initOwnerAccount()
+    initSettings()
+
+    const unsubs = [
+      listenTransactions(setTransactions),
+      listenCashFlow(setCashFlow),
+      listenStaffTasks(setStaffTasks),
+      listenAnnouncements(setAnnouncements),
+      listenStaff(setStaff),
+      listenAccounts(setAccounts),
+      listenSettings((s) => { setSettings(s); setLoading(false) }),
+    ]
+    return () => unsubs.forEach(u => u())
   }, [])
-
-  useEffect(() => { refresh() }, [refresh])
 
   const showToast = useCallback((message, type = 'success') => {
     if (!message) { setToast(null); return }
@@ -51,113 +60,114 @@ export function AppProvider({ children }) {
   }, [])
 
   // Transactions
-  const addTransaction = useCallback((data) => {
-    const item = _addTransaction(data)
-    setTransactions(getTransactions())
-    showToast('เพิ่มรายการสำเร็จ!')
-    const cfg = getSettings()
-    if (cfg.lineToken) {
-      sendLineNotify(cfg.lineToken, buildTransactionMessage(
+  const addTransaction = useCallback(async (data) => {
+    const item = await _addTransaction(data)
+    showToast('ເພີ່ມລາຍການສຳເລັດ!')
+    if (settings.lineToken) {
+      sendLineNotify(settings.lineToken, buildTransactionMessage(
         data.staffName, data.type, data.sourceAmount, data.rate, item.profit
       ))
     }
     return item
-  }, [showToast])
+  }, [showToast, settings])
 
-  const deleteTransaction = useCallback((id) => {
-    _deleteTransaction(id)
-    setTransactions(getTransactions())
-    showToast('ลบรายการแล้ว', 'info')
+  const deleteTransaction = useCallback(async (id) => {
+    await _deleteTransaction(id)
+    showToast('ລຶບລາຍການແລ້ວ', 'info')
   }, [showToast])
 
   // Cash flow
-  const addCashFlow = useCallback((data) => {
-    const item = _addCashFlow(data)
-    setCashFlow(getCashFlow())
-    showToast('บันทึกกระแสเงินสดสำเร็จ!')
-    if (data.type === 'โอนเก็บคลัง') {
-      const cfg = getSettings()
-      if (cfg.lineToken) {
-        sendLineNotify(cfg.lineToken, buildCashInMessage(
-          data.staffName || 'ไม่ระบุ', data.amount, data.note
-        ))
-      }
+  const addCashFlow = useCallback(async (data) => {
+    const item = await _addCashFlow(data)
+    showToast('ບັນທຶກກະແສເງິນສົດສຳເລັດ!')
+    if (data.type === 'โอนเก็บคลัง' && settings.lineToken) {
+      sendLineNotify(settings.lineToken, buildCashInMessage(
+        data.staffName || 'ບໍ່ລະບຸ', data.amount, data.note
+      ))
     }
     return item
-  }, [showToast])
+  }, [showToast, settings])
 
-  const deleteCashFlow = useCallback((id) => {
-    _deleteCashFlow(id)
-    setCashFlow(getCashFlow())
-    showToast('ลบรายการแล้ว', 'info')
+  const deleteCashFlow = useCallback(async (id) => {
+    await _deleteCashFlow(id)
+    showToast('ລຶບລາຍການແລ້ວ', 'info')
   }, [showToast])
 
   // Staff tasks
-  const addStaffTask = useCallback((data) => {
-    const item = _addStaffTask(data)
-    setStaffTasks(getStaffTasks())
-    showToast('เพิ่มงานสำเร็จ!')
+  const addStaffTask = useCallback(async (data) => {
+    const item = await _addStaffTask(data)
+    showToast('ເພີ່ມງານສຳເລັດ!')
     return item
   }, [showToast])
 
-  const updateStaffTask = useCallback((id, updates) => {
-    _updateStaffTask(id, updates)
-    setStaffTasks(getStaffTasks())
+  const updateStaffTask = useCallback(async (id, updates) => {
+    await _updateStaffTask(id, updates)
   }, [])
 
-  const deleteStaffTask = useCallback((id) => {
-    _deleteStaffTask(id)
-    setStaffTasks(getStaffTasks())
-    showToast('ลบงานแล้ว', 'info')
+  const deleteStaffTask = useCallback(async (id) => {
+    await _deleteStaffTask(id)
+    showToast('ລຶບງານແລ້ວ', 'info')
   }, [showToast])
 
   // Announcements
-  const addAnnouncement = useCallback((data) => {
-    const item = _addAnnouncement(data)
-    setAnnouncements(getAnnouncements())
-    showToast('เพิ่มประกาศสำเร็จ!')
+  const addAnnouncement = useCallback(async (data) => {
+    const item = await _addAnnouncement(data)
+    showToast('ເພີ່ມປະກາດສຳເລັດ!')
     return item
   }, [showToast])
 
-  const deleteAnnouncement = useCallback((id) => {
-    _deleteAnnouncement(id)
-    setAnnouncements(getAnnouncements())
-    showToast('ลบประกาศแล้ว', 'info')
+  const deleteAnnouncement = useCallback(async (id) => {
+    await _deleteAnnouncement(id)
+    showToast('ລຶບປະກາດແລ້ວ', 'info')
   }, [showToast])
 
   // Staff management
-  const addStaff = useCallback((name) => {
-    const item = _addStaff(name)
-    setStaff(getStaff())
-    showToast('เพิ่มพนักงานสำเร็จ!')
+  const addStaff = useCallback(async (name) => {
+    const item = await _addStaff(name)
+    showToast('ເພີ່ມພະນັກງານສຳເລັດ!')
     return item
   }, [showToast])
 
-  const deleteStaff = useCallback((id) => {
-    _deleteStaff(id)
-    setStaff(getStaff())
-    showToast('ลบพนักงานแล้ว', 'info')
+  const deleteStaff = useCallback(async (id) => {
+    await _deleteStaff(id)
+    showToast('ລຶບພະນັກງານແລ້ວ', 'info')
+  }, [showToast])
+
+  // Account management (login accounts with PIN)
+  const addAccount = useCallback(async (name, pin) => {
+    const item = await _addAccount(name, pin, 'employee')
+    showToast('ເພີ່ມບັນຊີພະນັກງານສຳເລັດ!')
+    return item
+  }, [showToast])
+
+  const deleteAccount = useCallback(async (id) => {
+    await _deleteAccount(id)
+    showToast('ລຶບບັນຊີແລ້ວ', 'info')
+  }, [showToast])
+
+  const updateAccountPin = useCallback(async (id, pin) => {
+    await _updateAccountPin(id, pin)
+    showToast('ອັບເດດລະຫັດສຳເລັດ!')
   }, [showToast])
 
   // Settings
-  const saveSettings = useCallback((s) => {
-    _saveSettings(s)
-    setSettings(getSettings())
-    showToast('บันทึกการตั้งค่าสำเร็จ!')
+  const saveSettings = useCallback(async (s) => {
+    await _saveSettings(s)
+    showToast('ບັນທຶກການຕັ້ງຄ່າສຳເລັດ!')
   }, [showToast])
 
   return (
     <AppContext.Provider value={{
-      user, login, logout,
+      user, login, logout, loading,
       transactions, addTransaction, deleteTransaction,
       cashFlow, addCashFlow, deleteCashFlow,
       staffTasks, addStaffTask, updateStaffTask, deleteStaffTask,
       announcements, addAnnouncement, deleteAnnouncement,
       staff, addStaff, deleteStaff,
+      accounts, addAccount, deleteAccount, updateAccountPin,
       settings, saveSettings,
       currentPage, setCurrentPage,
       toast, showToast,
-      refresh,
     }}>
       {children}
     </AppContext.Provider>

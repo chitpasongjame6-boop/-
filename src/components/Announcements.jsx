@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useApp } from '../context/AppContext'
-import { Plus, Trash2, Megaphone, Calendar, Clock } from 'lucide-react'
+import { Plus, Trash2, Megaphone, Calendar, Clock, X, AlarmClock } from 'lucide-react'
 import { format, isPast, isToday, isFuture } from 'date-fns'
 import { th } from 'date-fns/locale'
 
@@ -8,6 +8,7 @@ export default function Announcements() {
   const { announcements, addAnnouncement, deleteAnnouncement, user } = useApp()
   const [form, setForm] = useState({ title: '', date: '', startTime: '', endTime: '', description: '' })
   const [showForm, setShowForm] = useState(false)
+  const [selectedA, setSelectedA] = useState(null)
   const isOwner = user?.role === 'owner'
 
   const handleSubmit = (e) => {
@@ -115,7 +116,7 @@ export default function Announcements() {
             {upcoming.map(a => {
               const st = getStatus(a.date)
               return (
-                <div key={a.id} className="card border border-primary-500/20 hover:border-primary-500/40 transition-all group">
+                <div key={a.id} onClick={() => setSelectedA(a)} className="card border border-primary-500/20 hover:border-primary-500/40 transition-all group cursor-pointer">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3 min-w-0">
                       <div className="w-10 h-10 bg-primary-500/20 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -139,13 +140,13 @@ export default function Announcements() {
                           )}
                         </div>
                         {a.description && (
-                          <p className="text-sm text-dark-400 mt-2 leading-relaxed">{a.description}</p>
+                          <p className="text-sm text-dark-400 mt-2 leading-relaxed line-clamp-2">{a.description}</p>
                         )}
                       </div>
                     </div>
                     {isOwner && (
                       <button
-                        onClick={() => deleteAnnouncement(a.id)}
+                        onClick={e => { e.stopPropagation(); deleteAnnouncement(a.id) }}
                         className="opacity-0 group-hover:opacity-100 transition-opacity text-dark-600 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10 flex-shrink-0"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -168,7 +169,7 @@ export default function Announcements() {
           </h3>
           <div className="space-y-2">
             {past.map(a => (
-              <div key={a.id} className="card opacity-60 hover:opacity-80 transition-opacity group">
+              <div key={a.id} onClick={() => setSelectedA(a)} className="card opacity-60 hover:opacity-90 transition-all group cursor-pointer">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3 min-w-0">
                     <div className="w-9 h-9 bg-dark-800 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -192,7 +193,7 @@ export default function Announcements() {
                   </div>
                   {isOwner && (
                     <button
-                      onClick={() => deleteAnnouncement(a.id)}
+                      onClick={e => { e.stopPropagation(); deleteAnnouncement(a.id) }}
                       className="opacity-0 group-hover:opacity-100 transition-opacity text-dark-600 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10 flex-shrink-0"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -204,6 +205,66 @@ export default function Announcements() {
           </div>
         </div>
       )}
+
+      {/* Announcement Detail Modal */}
+      {selectedA && (() => {
+        const st = getStatus(selectedA.date)
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setSelectedA(null)}>
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <div className="relative w-full max-w-md bg-dark-900 border border-dark-700 rounded-2xl shadow-2xl animate-fade-in" onClick={e => e.stopPropagation()}>
+              {/* Header */}
+              <div className="flex items-center justify-between p-5 border-b border-dark-800">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-primary-500/20 rounded-xl flex items-center justify-center">
+                    <Megaphone className="w-4 h-4 text-primary-400" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-dark-100 leading-tight">{selectedA.title}</p>
+                    <span className={`badge text-xs ${st.color}`}>{st.label}</span>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedA(null)} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-dark-800 text-dark-400 hover:text-dark-200 transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              {/* Body */}
+              <div className="p-5 space-y-3">
+                <div className="bg-dark-800/60 rounded-xl p-3">
+                  <p className="text-xs text-dark-500 mb-1 flex items-center gap-1"><Calendar className="w-3 h-3" />ວັນທີ່</p>
+                  <p className="font-semibold text-dark-100">{format(new Date(selectedA.date), 'EEEE d MMMM yyyy', { locale: th })}</p>
+                </div>
+                {(selectedA.startTime || selectedA.endTime) && (
+                  <div className="bg-dark-800/60 rounded-xl p-3">
+                    <p className="text-xs text-dark-500 mb-1 flex items-center gap-1"><AlarmClock className="w-3 h-3" />ເວລາ</p>
+                    <p className="font-semibold text-dark-100">
+                      {selectedA.startTime}{selectedA.endTime ? ` – ${selectedA.endTime}` : ''} ນ.
+                    </p>
+                  </div>
+                )}
+                {selectedA.description && (
+                  <div className="bg-dark-800/60 rounded-xl p-3">
+                    <p className="text-xs text-dark-500 mb-2">ຣາຍລະເອີຍດ</p>
+                    <p className="text-sm text-dark-200 leading-relaxed whitespace-pre-wrap">{selectedA.description}</p>
+                  </div>
+                )}
+              </div>
+              {/* Footer */}
+              {isOwner && (
+                <div className="px-5 pb-5">
+                  <button
+                    onClick={() => { deleteAnnouncement(selectedA.id); setSelectedA(null) }}
+                    className="w-full py-2.5 rounded-xl border border-red-500/30 text-red-400 text-sm font-medium hover:bg-red-500/10 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    ລຶບປະກາດນີ້
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      })()}
 
       {announcements.length === 0 && (
         <div className="text-center py-20 text-dark-500">

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { useApp } from '../context/AppContext'
-import { Plus, Trash2, Search, Calculator, ArrowLeftRight, Download } from 'lucide-react'
+import { Plus, Trash2, Search, Calculator, ArrowLeftRight, Download, X, User, Clock, FileText, Percent, Wallet } from 'lucide-react'
 import { exportTransactionsCsv } from '../utils/exportCsv'
 import { formatCurrency, formatNumber, filterToday, filterThisMonth, sumProfit, sumSourceAmount } from '../utils/calculations'
 import { format } from 'date-fns'
@@ -27,6 +27,7 @@ export default function TransactionForm() {
   const [search, setSearch] = useState('')
   const [filterType, setFilterType] = useState('all')
   const [showPreview, setShowPreview] = useState(false)
+  const [selectedTx, setSelectedTx] = useState(null)
 
   const profit = useMemo(() => {
     const src = parseFloat(form.sourceAmount)
@@ -330,7 +331,7 @@ export default function TransactionForm() {
                   </thead>
                   <tbody>
                     {filtered.map(tx => (
-                      <tr key={tx.id} className="hover:bg-dark-800/50 transition-colors group">
+                      <tr key={tx.id} onClick={() => setSelectedTx(tx)} className="hover:bg-dark-800/50 transition-colors group cursor-pointer">
                         <td className="table-cell font-medium">{tx.staffName}</td>
                         {machines.length > 0 && <td className="table-cell text-dark-400 text-xs">{tx.machineName || '-'}</td>}
                         <td className="table-cell">
@@ -352,7 +353,7 @@ export default function TransactionForm() {
                         {isOwner && (
                           <td className="table-cell">
                             <button
-                              onClick={() => deleteTransaction(tx.id)}
+                              onClick={e => { e.stopPropagation(); deleteTransaction(tx.id) }}
                               className="opacity-0 group-hover:opacity-100 transition-opacity text-dark-600 hover:text-red-400 p-1 rounded-lg hover:bg-red-500/10"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -368,6 +369,99 @@ export default function TransactionForm() {
           </div>
         </div>
       </div>
+      {/* Transaction Detail Modal */}
+      {selectedTx && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setSelectedTx(null)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="relative w-full max-w-md bg-dark-900 border border-dark-700 rounded-2xl shadow-2xl animate-fade-in" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 border-b border-dark-800">
+              <div className="flex items-center gap-3">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${selectedTx.type === 'หลัก5' ? 'bg-blue-500/20' : 'bg-purple-500/20'}`}>
+                  <ArrowLeftRight className={`w-4 h-4 ${selectedTx.type === 'หลัก5' ? 'text-blue-400' : 'text-purple-400'}`} />
+                </div>
+                <div>
+                  <p className="font-semibold text-dark-100">ລາຍການແລກເງິນ</p>
+                  <p className="text-xs text-dark-500">{format(new Date(selectedTx.createdAt), 'HH:mm · EEEE d MMMM yyyy', { locale: th })}</p>
+                </div>
+              </div>
+              <button onClick={() => setSelectedTx(null)} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-dark-800 text-dark-400 hover:text-dark-200 transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-5 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-dark-800/60 rounded-xl p-3">
+                  <p className="text-xs text-dark-500 mb-1 flex items-center gap-1"><User className="w-3 h-3" />ພະນັກງານ</p>
+                  <p className="font-semibold text-dark-100">{selectedTx.staffName || '—'}</p>
+                </div>
+                <div className="bg-dark-800/60 rounded-xl p-3">
+                  <p className="text-xs text-dark-500 mb-1">ປະເພດ</p>
+                  <span className={`badge ${selectedTx.type === 'หลัก5' ? 'badge-blue' : 'badge-purple'}`}>{selectedTx.type}</span>
+                </div>
+              </div>
+
+              {selectedTx.machineName && (
+                <div className="bg-dark-800/60 rounded-xl p-3">
+                  <p className="text-xs text-dark-500 mb-1">ຕູ້ / ເຄື່ອງ</p>
+                  <p className="font-semibold text-blue-300">{selectedTx.machineName}</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-dark-800/60 rounded-xl p-3">
+                  <p className="text-xs text-dark-500 mb-1 flex items-center gap-1"><Wallet className="w-3 h-3" />ຍອດຕ້ນທາງ</p>
+                  <p className="font-bold text-dark-100 font-mono">₭{formatNumber(selectedTx.sourceAmount)}</p>
+                </div>
+                <div className="bg-dark-800/60 rounded-xl p-3">
+                  <p className="text-xs text-dark-500 mb-1 flex items-center gap-1"><Percent className="w-3 h-3" />ເຣທຫັກ</p>
+                  <p className="font-bold text-dark-100">{selectedTx.rate}%</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-dark-800/60 rounded-xl p-3">
+                  <p className="text-xs text-dark-500 mb-1">ຍອດສຸທທິ (ລູກຄ້າໄດ້)</p>
+                  <p className="font-bold text-dark-200 font-mono">₭{formatNumber(selectedTx.netAmount)}</p>
+                </div>
+                {isOwner && (
+                  <div className="bg-primary-500/10 border border-primary-500/20 rounded-xl p-3">
+                    <p className="text-xs text-dark-500 mb-1">ກຳໄລ</p>
+                    <p className="font-bold text-primary-400 font-mono">+₭{formatNumber(selectedTx.profit)}</p>
+                  </div>
+                )}
+              </div>
+
+              {selectedTx.note && (
+                <div className="bg-dark-800/60 rounded-xl p-3">
+                  <p className="text-xs text-dark-500 mb-1 flex items-center gap-1"><FileText className="w-3 h-3" />ຫມາຍເຫດຸ</p>
+                  <p className="text-sm text-dark-200">{selectedTx.note}</p>
+                </div>
+              )}
+
+              <div className="bg-dark-800/60 rounded-xl p-3">
+                <p className="text-xs text-dark-500 mb-1 flex items-center gap-1"><Clock className="w-3 h-3" />ວັນເວລາ</p>
+                <p className="text-sm text-dark-200">{format(new Date(selectedTx.createdAt), 'HH:mm:ss · d MMMM yyyy', { locale: th })}</p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            {isOwner && (
+              <div className="px-5 pb-5">
+                <button
+                  onClick={() => { deleteTransaction(selectedTx.id); setSelectedTx(null) }}
+                  className="w-full py-2.5 rounded-xl border border-red-500/30 text-red-400 text-sm font-medium hover:bg-red-500/10 transition-all flex items-center justify-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  ລຶບລາຍການນີ້
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

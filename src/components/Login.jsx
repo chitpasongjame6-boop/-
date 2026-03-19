@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import { useApp } from '../context/AppContext'
-import { TrendingUp, Shield, Users, Eye, EyeOff, Lock } from 'lucide-react'
+import { TrendingUp, Shield, Users, Eye, EyeOff, Lock, AlertTriangle, RefreshCw } from 'lucide-react'
 
 export default function Login() {
-  const { login, settings, accounts } = useApp()
+  const { login, settings, accounts, loading } = useApp()
   const [selectedAccount, setSelectedAccount] = useState(null)
   const [password, setPassword] = useState('')
   const [showPass, setShowPass] = useState(false)
@@ -73,8 +73,21 @@ export default function Login() {
               </div>
             )}
 
-            {accounts.length === 0 && (
-              <p className="text-center text-dark-500 text-sm py-4">ກຳລັງໂຫຼດບັນຊີ...</p>
+            {loading && accounts.length === 0 && (
+              <div className="text-center py-6">
+                <div className="w-8 h-8 border-2 border-primary-500/30 border-t-primary-500 rounded-full animate-spin mx-auto mb-3" />
+                <p className="text-dark-500 text-sm">ກຳລັງໂຫຼດບັນຊີ...</p>
+              </div>
+            )}
+            {!loading && accounts.length === 0 && (
+              <div className="card border border-red-500/20 text-center py-5 space-y-3">
+                <AlertTriangle className="w-8 h-8 text-red-400 mx-auto" />
+                <p className="text-sm text-red-300 font-medium">ບໍ່ສາມາດໂຫຼດຂໍ້ມູນໄດ້</p>
+                <p className="text-xs text-dark-500">ກະລຸນາກວດສອບ Firestore Rules ຫຼື ການເຊື່ອມຕໍ່ອິນເຕີເນັດ</p>
+                <button onClick={() => window.location.reload()} className="flex items-center gap-2 mx-auto px-4 py-2 rounded-xl bg-dark-800 border border-dark-600 text-dark-300 text-sm hover:border-primary-500/50 hover:text-primary-300 transition-all">
+                  <RefreshCw className="w-3.5 h-3.5" /> ລອງໃໝ່
+                </button>
+              </div>
             )}
           </div>
         ) : (

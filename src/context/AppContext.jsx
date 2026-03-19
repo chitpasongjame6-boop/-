@@ -34,6 +34,8 @@ export function AppProvider({ children }) {
     initOwnerAccount()
     initSettings()
 
+    const timer = setTimeout(() => setLoading(false), 5000)
+
     const unsubs = [
       listenTransactions(setTransactions),
       listenCashFlow(setCashFlow),
@@ -42,9 +44,9 @@ export function AppProvider({ children }) {
       listenStaff(setStaff),
       listenMachines(setMachines),
       listenAccounts(setAccounts),
-      listenSettings((s) => { setSettings(s); setLoading(false) }),
+      listenSettings((s) => { setSettings(s); setLoading(false); clearTimeout(timer) }),
     ]
-    return () => unsubs.forEach(u => u())
+    return () => { unsubs.forEach(u => u()); clearTimeout(timer) }
   }, [])
 
   const showToast = useCallback((message, type = 'success') => {

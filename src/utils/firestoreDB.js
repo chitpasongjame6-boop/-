@@ -17,35 +17,41 @@ export const COLS = {
 }
 
 // ─── Listeners (real-time) ────────────────────────────────────────────────────
+const errLog = (name) => (e) => console.warn(`[${name}]`, e.code || e.message)
+
 export function listenTransactions(cb) {
   const q = query(collection(db, COLS.TRANSACTIONS), orderBy('createdAt', 'desc'))
-  return onSnapshot(q, snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
+  return onSnapshot(q, snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))), errLog('transactions'))
 }
 export function listenCashFlow(cb) {
   const q = query(collection(db, COLS.CASH_FLOW), orderBy('createdAt', 'desc'))
-  return onSnapshot(q, snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
+  return onSnapshot(q, snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))), errLog('cashFlows'))
 }
 export function listenStaffTasks(cb) {
-  return onSnapshot(collection(db, COLS.STAFF_TASKS), snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
+  return onSnapshot(collection(db, COLS.STAFF_TASKS), snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))), errLog('staffTasks'))
 }
 export function listenAnnouncements(cb) {
   const q = query(collection(db, COLS.ANNOUNCEMENTS), orderBy('createdAt', 'desc'))
-  return onSnapshot(q, snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
+  return onSnapshot(q, snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))), errLog('announcements'))
 }
 export function listenStaff(cb) {
-  return onSnapshot(collection(db, COLS.STAFF), snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
+  return onSnapshot(collection(db, COLS.STAFF), snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))), errLog('staff'))
 }
 export function listenAccounts(cb) {
-  return onSnapshot(collection(db, COLS.ACCOUNTS), snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
+  return onSnapshot(collection(db, COLS.ACCOUNTS), snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))), errLog('accounts'))
 }
 export function listenMachines(cb) {
-  return onSnapshot(collection(db, COLS.MACHINES), snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
+  return onSnapshot(collection(db, COLS.MACHINES), snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))), errLog('machines'))
 }
 export function listenSettings(cb) {
-  return onSnapshot(doc(db, COLS.SETTINGS, 'main'), snap => {
-    if (snap.exists()) cb(snap.data())
-    else cb({ initialCash: 0, lineToken: '', businessName: 'ຮ້ານແລກເງິນ' })
-  })
+  return onSnapshot(
+    doc(db, COLS.SETTINGS, 'main'),
+    snap => {
+      if (snap.exists()) cb(snap.data())
+      else cb({ initialCash: 0, lineToken: '', businessName: 'ຮ້ານແລກເງິນ' })
+    },
+    (e) => { console.warn('[settings]', e.code || e.message); cb({ initialCash: 0, lineToken: '', businessName: 'ຮ້ານແລກເງິນ' }) }
+  )
 }
 
 // ─── Transactions ─────────────────────────────────────────────────────────────

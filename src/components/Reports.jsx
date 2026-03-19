@@ -12,7 +12,7 @@ import {
 } from '../utils/calculations'
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, subMonths, format } from 'date-fns'
 import { th } from 'date-fns/locale'
-import { BarChart3, Calendar, Download } from 'lucide-react'
+import { BarChart3, Calendar, Download, Monitor } from 'lucide-react'
 import { exportTransactionsCsv, exportPLReportCsv } from '../utils/exportCsv'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, Filler, ArcElement)
@@ -53,6 +53,7 @@ export default function Reports() {
   const [customFrom, setCustomFrom] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'))
   const [customTo, setCustomTo] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [activeTab, setActiveTab] = useState('overview')
+  const [selectedMachine, setSelectedMachine] = useState('all')
 
   const dateRange = useMemo(() => {
     const now = new Date()
@@ -65,8 +66,17 @@ export default function Reports() {
     return { from: new Date(customFrom), to: new Date(customTo) }
   }, [period, customFrom, customTo])
 
-  const filteredTx = useMemo(() => filterByDateRange(transactions, dateRange.from, dateRange.to), [transactions, dateRange])
-  const filteredCf = useMemo(() => filterByDateRange(cashFlow, dateRange.from, dateRange.to), [cashFlow, dateRange])
+  const filteredTx = useMemo(() => {
+    const byDate = filterByDateRange(transactions, dateRange.from, dateRange.to)
+    if (selectedMachine === 'all') return byDate
+    return byDate.filter(t => t.machineName === selectedMachine)
+  }, [transactions, dateRange, selectedMachine])
+
+  const filteredCf = useMemo(() => {
+    const byDate = filterByDateRange(cashFlow, dateRange.from, dateRange.to)
+    if (selectedMachine === 'all') return byDate
+    return byDate.filter(c => c.machineName === selectedMachine)
+  }, [cashFlow, dateRange, selectedMachine])
 
   const totalProfit = useMemo(() => sumProfit(filteredTx), [filteredTx])
   const totalVolume = useMemo(() => sumSourceAmount(filteredTx), [filteredTx])
@@ -179,6 +189,21 @@ export default function Reports() {
               <input type="date" className="input py-1.5 text-sm w-auto" value={customFrom} onChange={e => setCustomFrom(e.target.value)} />
               <span className="text-dark-500">ถึง</span>
               <input type="date" className="input py-1.5 text-sm w-auto" value={customTo} onChange={e => setCustomTo(e.target.value)} />
+            </div>
+          )}
+          {machines.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Monitor className="w-4 h-4 text-dark-500" />
+              <select
+                className="select py-1.5 text-sm w-auto"
+                value={selectedMachine}
+                onChange={e => setSelectedMachine(e.target.value)}
+              >
+                <option value="all">ທຸກຕູ້</option>
+                {machines.map(m => (
+                  <option key={m.id} value={m.name}>{m.name}</option>
+                ))}
+              </select>
             </div>
           )}
           <div className="ml-auto flex items-center gap-2">
